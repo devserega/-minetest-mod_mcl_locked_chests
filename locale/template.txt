@@ -1,0 +1,2 @@
+# textdomain: area_locked_chests
+Area Protected Chest=
