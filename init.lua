@@ -1,78 +1,40 @@
-local S = minetest.get_translator("area_locked_chests")
+local modname = minetest.get_current_modname()
+local path = minetest.get_modpath(modname)
+local drop_items_chest = mcl_util.drop_items_from_meta_container("main")
 
-local def = {
-	description = S("Area Protected Chest"),
-	tiles = {
-		"default_chest_top.png",
-		"default_chest_top.png",
-		"default_chest_side.png" .. "^[transformFX",
-		"default_chest_side.png",
-		"default_chest_side.png",
-		"default_chest_lock.png"
-	},
-	sounds = mcl_sounds.node_sound_wood_defaults(),
-	groups = {choppy = 2, oddly_breakable_by_hand = 2},
-	legacy_facedir_simple = true,
-	is_ground_content = false,
-	paramtype = "light",
-	paramtype2 = "facedir",
-	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
-		meta:set_string("infotext", S("Area Protected Chest"))
-		local inv = meta:get_inventory()
-		inv:set_size("main", 8*4)
-	end,
-	can_dig = function(pos,player)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return false
-		end
-		local meta = minetest.get_meta(pos)
-		local inv = meta:get_inventory()
-		return inv:is_empty("main")
-	end,
-	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return 0
-		end
-		return count
-	end,
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return 0
-		end
-		return stack:get_count()
-	end,
-	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return 0
-		end
-		return stack:get_count()
-	end,
-	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return itemstack
-		end
-		minetest.show_formspec(name,"area_locked_chests:area_locked_chests",default.chest.get_chest_formspec(pos))
-	end,
-	on_blast = function() end,
-}
+mcl_more_chests = {}
 
-default.set_inventory_action_loggers(def, "chest")
+base = dofile(path .. "/core/base.lua")
+dofile(path .. "/models/custom_chest.lua")
+dofile(path .. "/models/private_chest.lua")
+--dofile(path .. "/shared_chest.lua")
 
-minetest.register_node("area_locked_chests:area_locked_chests", def)
+local function select_and_spawn_entity(pos, node)
+	local node_name = node.name
+	local node_def = minetest.registered_nodes[node_name]
+	local double_chest = minetest.get_item_group(node_name, "double_chest") > 0
+	--minetest.log("action", "serega: select_and_spawn_entity, entity_name=" .. minetest.serialize(node_def._entity_name))
+	base.find_or_create_entity(pos, node_name, node_def._entity_name, node_def._chest_entity_textures, node.param2, double_chest, node_def._chest_entity_sound, node_def._chest_entity_mesh, node_def._chest_entity_animation_type)
+end
 
-minetest.register_craft({
-	type = "shapeless",
-	recipe = {"default:chest_locked","default:steel_ingot"},
-	output = "area_locked_chests:area_locked_chests",
+-- Этот код выполняет автоматическое создание сущностей (entities) сундуков для соответствующих нод при загрузке карты.
+minetest.register_lbm({
+	label = "Spawn More Chest entities",
+	name = "mcl_more_chests:spawn_more_chest_entities",
+	nodenames = { "group:more_chest_entity" },
+	run_at_every_load = true,
+	action = select_and_spawn_entity,
 })
+
+-- Disable chest when it has been closed
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if formname:find("mcl_more_chests:") == 1 then
+		if fields.quit then
+			base.player_chest_close(player)
+		end
+	end
+end)
+
+minetest.register_on_leaveplayer(function(player)
+	base.player_chest_close(player)
+end)

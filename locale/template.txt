@@ -1,2 +1,2 @@
-# textdomain: area_locked_chests
-Area Protected Chest=
+# textdomain: mcl_assitional_chests
+Locked Chest=
