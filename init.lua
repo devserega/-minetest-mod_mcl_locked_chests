@@ -5,7 +5,7 @@ local drop_items_chest = mcl_util.drop_items_from_meta_container("main")
 mcl_more_chests = {}
 
 base = dofile(path .. "/core/base.lua")
-dofile(path .. "/models/custom_chest.lua")
+--dofile(path .. "/models/custom_chest.lua")
 dofile(path .. "/models/private_chest.lua")
 --dofile(path .. "/shared_chest.lua")
 
