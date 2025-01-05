@@ -1,7 +1,21 @@
-# More Chests for VoxelLibre
-This is an additional chests for VoxeLibre that check ownership. 
-Try porting https://github.com/minetest-mods/more_chests/tree/master 
+# More Chests for VoxeLibre
+Try adopting https://github.com/minetest-mods/more_chests/tree/master for VoxeLibre
 
-https://github.com/C-C-Minetest-Server/area_locked_chests
-Though named "[Area](https://content.minetest.net/packages/ShadowNinja/areas/)"-Locked Chests, this mod should be compactible with all protection mods respecting `minetest.is_protected` and `minetest.record_protection_violation`.
-The screenshot shows an Area-Locked Chests, with an [Area Protector Block](https://content.minetest.net/packages/Emojiminetest/protect_block_area/) that is not included in this mod.
+### Available models
+> NOTE: descriptions of the original models come from 0gb.us initial effort
+
+#### Private Chest
+Checking ownership. Only the chest's owner can put/take chests contents.
+1 | 2 | 3
+---|---|---
+group:wood | group:wood | group:wood
+group:wood | mcl_core:gold_ingot | group:wood
+group:wood | group:wood | group:wood
+
+#### Shared Chest
+Checking ownership. Only the chest's owner and shared users can put/take chests contents.
+1 | 2 | 3
+---|---|---
+group:wood | group:leaves | group:wood
+group:wood | mcl_core:gold_ingot | group:wood
+group:wood | group:wood | group:wood

@@ -1,12 +1,12 @@
 local modname = minetest.get_current_modname()
 local path = minetest.get_modpath(modname)
-local drop_items_chest = mcl_util.drop_items_from_meta_container("main")
 
 mcl_more_chests = {}
 
 base = dofile(path .. "/core/base.lua")
 --dofile(path .. "/models/custom_chest.lua")
 dofile(path .. "/models/private_chest.lua")
+dofile(path .. "/models/shared_chest.lua")
 --dofile(path .. "/shared_chest.lua")
 
 local function select_and_spawn_entity(pos, node)
@@ -28,9 +28,45 @@ minetest.register_lbm({
 
 -- Disable chest when it has been closed
 minetest.register_on_player_receive_fields(function(player, formname, fields)
+ 	-- Проверяем, что имя формы начинается с mcl_more_chests:
 	if formname:find("mcl_more_chests:") == 1 then
+		-- Обработка кнопки "Quit" (закрытие формы)
 		if fields.quit then
 			base.player_chest_close(player)
+		end
+		
+		-- Обработка поля "shared"
+		if fields.shared then
+			--minetest.log("action", "chest fields: " .. dump(fields))
+			
+			-- Получаем позицию объекта, с которым связана форма
+			local x, y, z = formname:match("shared_chest_([%-?%d]+)_([%-?%d]+)_([%-?%d]+)")
+			
+			if x and y and z then
+				-- Координаты успешно извлечены, создаем таблицу pos
+				local pos = {x = tonumber(x), y = tonumber(y), z = tonumber(z)}
+				--minetest.log("action", "Chest position: " .. minetest.pos_to_string(pos))
+
+				-- Получаем мета-данные объекта
+				local meta = minetest.get_meta(pos)
+				
+				-- Проверяем, что игрок является владельцем объекта (если необходимо)
+				if meta:get_string("owner") == player:get_player_name() then
+					-- Сохраняем значение из поля "shared" в мета-данные
+					meta:set_string("shared", fields.shared)
+
+					-- Логируем для отладки
+					--minetest.log("action", "Shared value set to: " .. fields.shared)
+
+					-- Здесь можно добавить другие действия, например, обновить форму
+					-- minetest.show_formspec(player:get_player_name(), "your_form_name", get_formspec(fields.shared))
+				else
+					-- Если игрок не является владельцем, отправляем сообщение
+					minetest.chat_send_player(player:get_player_name(), "You are not the owner of this chest.")
+				end
+			else
+				minetest.log("error", "Failed to extract position from formname: " .. formname)
+			end
 		end
 	end
 end)

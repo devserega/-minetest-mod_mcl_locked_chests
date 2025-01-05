@@ -2,6 +2,7 @@ local S = minetest.get_translator("mcl_more_chests")
 --local S = minetest.get_translator(minetest.get_current_modname())
 local F = minetest.formspec_escape
 local C = minetest.colorize
+local drop_items_chest = mcl_util.drop_items_from_meta_container("main")
 
 local string = string
 local table = table
@@ -16,8 +17,8 @@ local sf = string.format
 -- common custom chest configuration
 local basename = "private_chest"
 local description = S("Private Chest")
-local tt_help = S("Private Chest are containers which provide 27 inventory slots.")
-local longdesc = S("To access its inventory, rightclick it. When broken, the items will drop out.")
+local tt_help = S("Private Chest are containers which provide 27 inventory slots. Only owner can open it.")
+local longdesc = S("To access its inventory, rightclick it. Can not broken, while inventory not empty.")
 local usagehelp = S("27 inventory slots")
 local small_textures = {"mcl_private_chest_wood.png"}
 local sounds = mcl_sounds.node_sound_wood_defaults()
@@ -33,21 +34,29 @@ local simple_rotate
 base.register_chest_entity(entity_name)
 
 -- Chest Node
+local function check_privs(meta, player)
+	if player:get_player_name() == meta:get_string("owner") then
+		return true
+	else
+		return false
+	end
+end
+
 local function protection_check_move(pos, from_list, from_index, to_list, to_index, count, player)
 	local meta = minetest.get_meta(pos)
-	if player:get_player_name() ~= meta:get_string("owner") then
-		return 0
-	else
+	if check_privs(meta, player) then
 		return count
+	else
+		return 0
 	end
 end
 
 local function protection_check_put_take(pos, listname, index, stack, player)
 	local meta = minetest.get_meta(pos)
-	if player:get_player_name() ~= meta:get_string("owner") then
-		return 0
-	else
+	if check_privs(meta, player) then
 		return stack:get_count()
+	else
+		return 0
 	end
 end
 
